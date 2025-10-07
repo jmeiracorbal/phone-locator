@@ -1,9 +1,9 @@
-name: Build and make release
+name: Build and Release
 
 on:
   push:
     tags:
-      - '*'
+      - 'v*'
 
 jobs:
   build:
@@ -19,14 +19,14 @@ jobs:
       with:
         python-version: '3.11'
     
-    - name: Install Poetry
-      run: pip install poetry
+    - name: Install uv
+      run: pip install uv
     
     - name: Install dependencies
-      run: poetry install
+      run: uv sync --all-extras
     
     - name: Build executable
-      run: poetry run pyinstaller --onefile --name "phone-tracker" phone_tracker.py
+      run: uv run pyinstaller --onefile --name "phone-locator" main.py
     
     - name: List files in dist (Linux/macOS)
       if: runner.os != 'Windows'
@@ -39,7 +39,7 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: phone-tracker-${{ matrix.os }}
+        name: phone-locator-${{ matrix.os }}
         path: dist/
 
   create-release:
@@ -56,9 +56,9 @@ jobs:
       run: |
         find artifacts/ -type f
         ls -la artifacts/
-        ls -la artifacts/phone-tracker-ubuntu-latest/
-        ls -la artifacts/phone-tracker-macos-latest/
-        ls -la artifacts/phone-tracker-windows-latest/
+        ls -la artifacts/phone-locator-ubuntu-latest/
+        ls -la artifacts/phone-locator-macos-latest/
+        ls -la artifacts/phone-locator-windows-latest/
     
     - name: Create release
       id: create_release
@@ -67,31 +67,37 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: ${{ github.ref_name }}
-        release_name: ${{ github.ref_name }}
+        release_name: Phone Locator ${{ github.ref_name }}
         body: |
-          ## Phone tracker ${{ github.ref_name }}
+          ## Phone Locator ${{ github.ref_name }}
           
           ### Downloads
           
-          **Linux**: `phone-tracker` - Compatible with most distributions
-          **macOS**: `phone-tracker` - Native for Apple Silicon/Intel
-          **Windows**: `phone-tracker.exe` - Windows 10/11 compatible
+          **Linux**: `phone-locator-linux` - Compatible with most distributions
+          **macOS**: `phone-locator-macos` - Native for Apple Silicon/Intel
+          **Windows**: `phone-locator-windows.exe` - Windows 10/11 compatible
           
           ### Installation
           Download the executable for your platform and run it directly. No Python installation required.
           
           ### Usage
           
-          Linux/macOS: 
+          **Linux/macOS**: 
           ```bash
-          ./phone-tracker
+          chmod +x phone-locator-*
+          ./phone-locator-*
           ```
           
-          Windows:
-          
-          ```bash
-          phone-tracker.exe
+          **Windows**:
+          ```cmd
+          phone-locator-windows.exe
           ```
+          
+          ### What's Changed
+          - Phone number geolocation and analysis
+          - Carrier information lookup
+          - Timezone identification
+          - Number validation and formatting
         draft: false
         prerelease: false
     
@@ -101,8 +107,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: artifacts/phone-tracker-ubuntu-latest/phone-tracker
-        asset_name: phone-tracker-linux
+        asset_path: artifacts/phone-locator-ubuntu-latest/phone-locator
+        asset_name: phone-locator-linux
         asset_content_type: application/octet-stream
     
     - name: Upload macOS asset
@@ -111,8 +117,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: artifacts/phone-tracker-macos-latest/phone-tracker
-        asset_name: phone-tracker-macos
+        asset_path: artifacts/phone-locator-macos-latest/phone-locator
+        asset_name: phone-locator-macos
         asset_content_type: application/octet-stream
     
     - name: Upload Windows asset
@@ -121,6 +127,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: artifacts/phone-tracker-windows-latest/phone-tracker.exe
-        asset_name: phone-tracker-windows.exe
+        asset_path: artifacts/phone-locator-windows-latest/phone-locator.exe
+        asset_name: phone-locator-windows.exe
         asset_content_type: application/octet-stream
