@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -26,107 +29,89 @@ jobs:
       run: uv sync --all-extras
     
     - name: Build executable
-      run: uv run pyinstaller --onefile --name "phone-locator" main.py
+      run: uv run pyinstaller --onefile --name "phone-locator" src/tracker/__main__.py
     
-    - name: List files in dist (Linux/macOS)
-      if: runner.os != 'Windows'
-      run: ls -la dist/
+    - name: Rename binary (Linux)
+      if: runner.os == 'Linux'
+      run: mv dist/phone-locator dist/phone-locator-linux
     
-    - name: List files in dist (Windows)
+    - name: Rename binary (macOS)
+      if: runner.os == 'macOS'
+      run: mv dist/phone-locator dist/phone-locator-macos
+    
+    - name: Rename binary (Windows)
       if: runner.os == 'Windows'
-      run: dir dist\
+      run: mv dist/phone-locator.exe dist/phone-locator-windows.exe
     
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
         name: phone-locator-${{ matrix.os }}
-        path: dist/
+        path: dist/phone-locator-*
 
   create-release:
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     
     steps:
+    - uses: actions/checkout@v4
+    
     - name: Download all artifacts
       uses: actions/download-artifact@v4
       with:
         path: artifacts/
     
     - name: List downloaded artifacts
-      run: |
-        find artifacts/ -type f
-        ls -la artifacts/
-        ls -la artifacts/phone-locator-ubuntu-latest/
-        ls -la artifacts/phone-locator-macos-latest/
-        ls -la artifacts/phone-locator-windows-latest/
+      run: find artifacts/ -type f
     
-    - name: Create release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
       with:
-        tag_name: ${{ github.ref_name }}
-        release_name: Phone Locator ${{ github.ref_name }}
+        name: Phone Locator ${{ github.ref_name }}
         body: |
           ## Phone Locator ${{ github.ref_name }}
           
+          CLI tool for phone number geolocation and carrier information.
+          
           ### Downloads
           
-          **Linux**: `phone-locator-linux` - Compatible with most distributions
-          **macOS**: `phone-locator-macos` - Native for Apple Silicon/Intel
-          **Windows**: `phone-locator-windows.exe` - Windows 10/11 compatible
+          - **Linux**: `phone-locator-linux` - Compatible with most distributions
+          - **macOS**: `phone-locator-macos` - Native for Apple Silicon/Intel
+          - **Windows**: `phone-locator-windows.exe` - Windows 10/11 compatible
           
-          ### Installation
-          Download the executable for your platform and run it directly. No Python installation required.
+          ### Installation Options
           
-          ### Usage
+          **Option 1: From PyPI**
+          ```bash
+          pip install phone-locator
+          phone-locator
+          ```
           
-          **Linux/macOS**: 
+          **Option 2: Download executable**
+          
+          Linux/macOS:
           ```bash
           chmod +x phone-locator-*
           ./phone-locator-*
           ```
           
-          **Windows**:
+          Windows:
           ```cmd
           phone-locator-windows.exe
           ```
           
-          ### What's Changed
+          ### What's Included
           - Phone number geolocation and analysis
           - Carrier information lookup
           - Timezone identification
           - Number validation and formatting
+        files: |
+          artifacts/phone-locator-ubuntu-latest/phone-locator-linux
+          artifacts/phone-locator-macos-latest/phone-locator-macos
+          artifacts/phone-locator-windows-latest/phone-locator-windows.exe
         draft: false
         prerelease: false
-    
-    - name: Upload Linux asset
-      uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: artifacts/phone-locator-ubuntu-latest/phone-locator
-        asset_name: phone-locator-linux
-        asset_content_type: application/octet-stream
-    
-    - name: Upload macOS asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: artifacts/phone-locator-macos-latest/phone-locator
-        asset_name: phone-locator-macos
-        asset_content_type: application/octet-stream
-    
-    - name: Upload Windows asset
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: artifacts/phone-locator-windows-latest/phone-locator.exe
-        asset_name: phone-locator-windows.exe
-        asset_content_type: application/octet-stream
