@@ -1,11 +1,9 @@
-from tracker import track_phone
+from . import track_phone
 import time
 import os
 import sys
 
-Wh = '\033[1;37m'
-Gr = '\033[1;32m'
-Re = '\033[1;31m'
+from constants import Wh, Gr, Re
 
 def clear():
     """Limpia la pantalla del terminal"""
