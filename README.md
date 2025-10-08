@@ -1,4 +1,10 @@
-# Phone Locator
+```
+    ____  __                    __                     __            
+   / __ \/ /_  ____  ____  ___  / /   ____  _________ _/ /_____  _____
+  / /_/ / __ \/ __ \/ __ \/ _ \/ /   / __ \/ ___/ __ `/ __/ __ \/ ___/
+ / ____/ / / / /_/ / / / /  __/ /___/ /_/ / /__/ /_/ / /_/ /_/ / /    
+/_/   /_/ /_/\____/_/ /_/\___/_____/\____/\___/\__,_/\__/\____/_/     
+```
 
 [![PyPI version](https://img.shields.io/pypi/v/phone-locator.svg)](https://pypi.org/project/phone-locator/)
 [![PyPI downloads](https://img.shields.io/pypi/dm/phone-locator.svg)](https://pypi.org/project/phone-locator/)
